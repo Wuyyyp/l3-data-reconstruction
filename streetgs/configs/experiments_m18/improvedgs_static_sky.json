@@ -1,0 +1,12 @@
+{
+  "sky": true,
+  "actors": false,
+  "pose_optimization": false,
+  "data_cache": "/mnt/zhoukaixuan_workspace/code/improved-GS-bilateral/data/m18_static",
+  "images": "/mnt/zhoukaixuan_workspace/code/3rgs_ba_25000_20261010/data/images",
+  "scene_geometry": "/mnt/zhoukaixuan_workspace/code/3rgs_ba_25000_20261010/data/scene.pt",
+  "initialization_ply": "/mnt/zhoukaixuan_workspace/code/gsplat_shape_recovery_20261013/output/initialization.ply",
+  "output": "/mnt/zhoukaixuan_workspace/code/street_gaussians/output/improvedgs_static_sky_integration_20261015",
+  "python": "/mnt/zhoukaixuan_workspace/code/Improved-GS/.venv/bin/python",
+  "dependencies": "/mnt/zhoukaixuan_workspace/code/gsplat_shape_recovery_20261013/deps"
+}

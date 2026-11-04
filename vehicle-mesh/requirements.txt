@@ -1,0 +1,6 @@
+# Python 3.12, CUDA 12.8. Keep the registration backend's requirements in one place.
+torch==2.7.1
+torchvision==0.22.1
+numpy==1.26.4
+opencv-python-headless==4.11.0.86
+-r registration/requirements.txt

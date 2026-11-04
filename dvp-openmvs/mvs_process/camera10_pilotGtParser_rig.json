@@ -1,0 +1,5 @@
+{
+  "description": "Calibrated for 2026_04_25_14_32_57_dlp_pilotGtParser camera 10; coordinates in unpadded source image, exclude dashboard/wipers and ego hood. Review before another camera rig.",
+  "camera10_topline": [[0, 0.64], [1, 0.64]],
+  "edge_margin_at_960": 2
+}

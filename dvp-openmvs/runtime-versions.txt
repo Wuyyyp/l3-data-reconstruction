@@ -1,0 +1,8 @@
+Python 3.11.15
+torch==2.8.0
+numpy==2.2.6
+scipy==1.17.1
+opencv-python==5.0.0.93
+plyfile==1.1.4
+trimesh==4.12.2
+Pillow==12.3.0

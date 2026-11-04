@@ -1,0 +1,71 @@
+import sys
+from pathlib import Path
+sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'deps'))
+from bridge import *
+from scene.gaussian_model import GaussianModel
+from lib_bilagrid import BilateralGrid,slice
+from utils.static_losses import masked_ssim
+from PIL import Image,ImageDraw
+import csv
+
+import lib.models.sky_cubemap as cube_module
+_original_rays=cube_module.get_rays_torch
+def fixed_rays(*args,**kwargs):
+ kwargs['perturb']=False
+ return _original_rays(*args,**kwargs)
+cube_module.get_rays_torch=fixed_rays
+def matched_sky(sky,c):
+ mode=cfg.mode
+ try:
+  cfg.mode='train'
+  return sky(c)
+ finally:cfg.mode=mode
+
+@torch.no_grad()
+def main():
+ torch.set_num_threads(4);ck=torch.load(sys.argv[1]);out=Path(sys.argv[2]);out.mkdir(parents=True,exist_ok=True)
+ ds,cams=dataset();assert ck['camera_names']==[c.image_name for c in cams]
+ bg=GaussianModel(1,'ours_adam');m=ck['model'];bg.active_sh_degree=m[0];bg.max_sh_degree=m[1]
+ for k,v in zip(PARAMS,m[2:8]):setattr(bg,k,v)
+ cfg.mode='evaluate';scene=DynamicScene(ds,cams,bg,out,initialize=False);scene.sg.actor_pose.training_setup() if scene.sg.actor_pose is not None else None;scene.restore(ck['dynamic']);scene.sg.active_sh_degree=bg.active_sh_degree;sky=scene.sg.sky_cubemap
+ grid=BilateralGrid(len(cams),16,16,8).cuda() if ck['grid'] is not None else None
+ if grid is not None:grid.load_state_dict(ck['grid'])
+ step=ck['iteration'];del ck,m;cfg.mode='evaluate'
+ pipe=SimpleNamespace(debug=False,antialiasing=False);background=torch.zeros(3,device='cuda');rows=[];xy={}
+ def images(c):
+  pkg=scene.render(c,bg,pipe,background,track_gradients=False);raw=pkg['render']+(1-pkg['acc'])*matched_sky(sky,c);h,w=c.image_height,c.image_width
+  if (h,w) not in xy:
+   y,x=torch.meshgrid((torch.arange(h,device='cuda')+.5)/h,(torch.arange(w,device='cuda')+.5)/w,indexing='ij');xy[h,w]=torch.stack([x,y],-1)
+  pred=slice(grid,xy[h,w],raw.permute(1,2,0),torch.tensor([c.uid],device='cuda'))['rgb'].permute(2,0,1) if grid is not None else (scene.sg.color_correction(c,raw) if scene.sg.color_correction is not None else raw)
+  return raw,pred
+ limit=int(os.environ.get('EVAL_LIMIT',len(cams)))
+ for i,c in enumerate([x for x in cams if int(x.image_name.split('_')[0]) in (20,50,80)]):
+  raw,pred=images(c);gt=c.original_image.cuda();mask=c.alpha_mask.cuda();mask=mask & ~c.guidance['obj_bound'].cuda().bool() if not cfg.model.nsg.include_obj else mask;dynamic=mask&c.guidance['obj_bound'].cuda().bool();static=mask&~dynamic;row=dict(image=c.image_name,camera=c.image_name.rsplit('_',1)[1],valid_pixels=int(mask.sum()),dynamic_pixels=int(dynamic.sum()))
+  for name,img in [('raw',raw),('grid',pred)]:
+   image=(img.clamp(0,1)*255+.5).byte().float()/255
+   row[name+'_ssim']=float(masked_ssim(image,gt,mask))
+   for reg,mm in [('all',mask),('dynamic',dynamic),('static',static)]:row[name+'_'+reg+'_psnr']=float(-10*torch.log10(((image-gt)**2)[mm.expand_as(image)].mean().clamp_min(1e-15))) if mm.any() else None
+  rows.append(row)
+  if (i+1)%50==0:print('EVALUATED',i+1,flush=True)
+ keys=[k for k in rows[0] if k.startswith(('raw_','grid_'))]
+ def summary(rr):return {k:float(np.mean([z[k] for z in rr if z[k] is not None])) if any(z[k] is not None for z in rr) else None for k in keys}
+ result=dict(images=len(rows),step=step,summary=summary(rows),cameras={c:summary([z for z in rows if z['camera']==c]) for c in sorted(set(z['camera'] for z in rows))},rows=rows,background=len(bg.get_xyz),actors=len(scene.sg.obj_list),actor_points=scene.actor_count(),sky_points=0,protocol=('Dynamic' if cfg.model.nsg.include_obj else 'Static; object regions excluded')+'; 707 training views, fixed BA cameras. Vehicle pixels included; hood/mirrors excluded. Round uint8, strict 11x11 SSIM. Dynamic region is source obj_bound guidance, not an independently annotated test mask.')
+ (out/'results.json').write_text(json.dumps(result,indent=2));
+ with (out/'per_image.csv').open('w') as f:
+  w=csv.DictWriter(f,fieldnames=rows[0]);w.writeheader();w.writerows(rows)
+ parts=['<meta charset="utf-8"><h1>Dynamic ImprovedGS + StreetGS actors + grid + sky</h1><pre>'+json.dumps({k:v for k,v in result.items() if k!='rows'},indent=2)+'</pre>']
+ by={c.image_name:c for c in cams};selected=[]
+ for camera in result['cameras']:
+  rr=sorted([z for z in rows if z['camera']==camera],key=lambda z:z['image'])
+  selected.extend(rr)
+ for row in selected:
+  c=by[row['image']];raw,pred=images(c);ims=[c.original_image,raw.cpu(),pred.cpu()];h=round(480*c.image_height/c.image_width);panel=Image.new('RGB',(1440,h+32),'white');draw=ImageDraw.Draw(panel)
+  for j,(v,label) in enumerate(zip(ims,['GT','Raw','Affine'])):
+   im=Image.fromarray((v.clamp(0,1)*255+.5).byte().permute(1,2,0).numpy());panel.paste(im.resize((480,h)),(j*480,32));draw.text((j*480+8,8),label,fill='black')
+  name=c.image_name+'.jpg';panel.save(out/name,quality=94);parts.append('<h2>'+c.image_name+'</h2><img style="max-width:100%" src="'+name+'">')
+ (out/'report.html').write_text(''.join(parts))
+ loader=getattr(cams[0],'_payload_loader',None)
+ if loader is not None:loader.close()
+ (out/'completion.json').write_text(json.dumps(dict(step=step,images=len(rows),loader_closed=True)))
+ print('EVAL_COMPLETE',result['summary'],flush=True)
+if __name__=='__main__':main()

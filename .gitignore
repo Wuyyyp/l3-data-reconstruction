@@ -1,0 +1,15 @@
+dist/
+**/__pycache__/
+**/.pytest_cache/
+*.pyc
+*.partial
+.env
+.DS_Store
+
+local.env
+/.envs/
+/runtime/
+/assets/
+/weights/
+/tools/
+/work/

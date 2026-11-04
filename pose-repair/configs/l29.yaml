@@ -1,0 +1,315 @@
+dataset_root: /mnt/workspace/Data_Canonical/L29_canonical
+output_root: /mnt/workspace/Pose_Dynamic_Compensation/outputs
+run_name: l29_dynamic_compensated_offset10ms
+cameras:
+  - front_camera_fov30
+  - front_camera_fov120
+  - left_front_camera
+  - left_rear_camera
+  - rear_camera
+  - right_front_camera
+  - right_rear_camera
+frame_offsets: [1, 2, 5]
+colmap:
+  mvs_backend: colmap
+  enabled: true
+  colmap_executable: ../tools/colmap_pose_prior/bin/colmap
+  run_bundle_adjustment: true
+  ba_mode: absolute_pose_prior
+  absolute_pose_prior_colmap_executable: ../tools/colmap_pose_prior/bin/colmap
+  ba_position_prior_sigma_m: 0.1
+  ba_rotation_prior_sigma_deg: 0.5
+  pose_variant: after
+  feature_max_image_size: 2400
+  matching_pair_offsets: [1, 2, 5]
+  matching_inter_camera_pairs: []
+  use_gpu: false  # Bundled COLMAP was built without GPU support.
+  gpu_index: "0"
+  run_dense: false
+  dense_max_image_size: 1280
+  patch_match_max_num_neighbors: 12
+  patch_match_num_iterations: 4
+  patch_match_num_samples: 10
+  stereo_fusion_use_cache: true
+  stereo_fusion_cache_size_gb: 16
+  colmap_pose_mask_classes: [person, rider, bicycle, motorcycle, car, bus, truck, train, trailer, caravan, animal, vegetation, sky]
+  colmap_dense_mask_classes: [person, rider, bicycle, motorcycle, car, bus, truck, train, trailer, caravan, animal, sky]
+dynamic_compensation:
+  workers: 8
+  track_workers: 4
+  cloud_cache_max_gb: 8.0
+  single_lidar_output_mode: hardlink
+semantic_segmentation:
+  processor_image_size: 1024
+  inference_dtype: fp16
+  use_fast_processor: true
+  confidence: 0.25
+  dilation_pixels: 5
+  batch_size: 4
+  write_workers: 8
+  preview_ratio: 0.01
+image_cache:
+  enabled: true
+  mode: preload
+  max_long_side: 1600
+matching:
+  backend: loma
+  model_device: cuda:0
+  loma_image_size: 1600
+  loma_max_keypoints: 2048
+  loma_score_threshold: 0.3
+  loma_score_threshold_intra: 0.3
+  loma_score_threshold_inter: 0.1
+  loma_feature_cache_mode: model
+  loma_feature_cache_gpu_max_items: 5000
+  loma_feature_cache_cpu_max_items: null
+  loma_process_count: 1
+  filter_workers: 4
+  overlap_filtering: true
+  visualization_pairs: 3
+  cache_visualization_pair_ratio: 0.01
+optimization:
+  pair_sample_strategy: spatial_grid_random
+  pair_sample_max_matches: 30
+  pair_sample_grid_cols: 3
+  pair_sample_grid_rows: 3
+  pair_sample_seed: 20260704
+  max_nfev: 5000
+  torch_learning_rate: 0.001
+  torch_lr_schedule: step
+  torch_lr_step_size: 200
+  torch_lr_decay: 0.5
+  torch_lr_min_factor: 0.1
+  torch_early_stopping_min_delta: 0.00001
+  torch_early_stopping_min_steps: 1000
+  inter_weight: 2.0
+
+  # Fixed mount extrinsic correction: one SE(3) delta per camera.
+  translation_bound_m: 0.15
+  rotation_bound_deg: 1.5
+  fixed_translation_l2_weight: 50000.0
+  fixed_rotation_l2_weight: 50000.0
+
+  # Camera mount time-varying disturbance: one local delta per camera-frame.
+  optimize_time_varying_disturbance: true
+  time_varying_disturbance_dof: 6
+  time_varying_rotation_bound_deg: 0.8
+  time_varying_translation_bound_m: 0.03
+  time_varying_translation_l2_weight: 50000.0
+  time_varying_rotation_l2_weight: 50000.0
+  time_varying_translation_smooth_l2_weight: 2000.0
+  time_varying_rotation_smooth_l2_weight: 2000.0
+  time_varying_translation_mean_l2_weight: 50000.0
+  time_varying_rotation_mean_l2_weight: 50000.0
+  time_varying_frame_common_translation_l2_weight: 50000.0
+  time_varying_frame_common_rotation_l2_weight: 50000.0
+
+  # Ego/body pose time-varying disturbance: one local delta per frame.
+  optimize_body_time_varying_disturbance: true
+  body_time_varying_disturbance_dof: 6
+  body_time_varying_rotation_bound_deg: 1.5
+  body_time_varying_translation_bound_m: 0.05
+  body_time_varying_translation_l2_weight: 20000.0
+  body_time_varying_rotation_l2_weight: 20000.0
+  body_time_varying_translation_smooth_l2_weight: 300.0
+  body_time_varying_rotation_smooth_l2_weight: 300.0
+
+  mode_projection_enabled: true
+
+  absorb_camera_common_mode: true
+  camera_common_mode_min_cameras: 3
+  camera_common_mode_min_median_cos: 0.5
+  camera_common_mode_min_positive_projection_fraction: 0.8
+  absorb_camera_long_term_mode: true
+  camera_long_term_mode_min_frames: 30
+  camera_long_term_mode_min_median_cos: 0.5
+  camera_long_term_mode_min_positive_projection_fraction: 0.8
+  camera_long_term_mode_min_mean_to_rms: 0.35
+preflight_diagnostic:
+  enabled: true
+  sample_strategy: temporal_stratified
+  sample_pairs_per_relation: 20
+  max_total_pairs: 800
+  random_seed: 20260704
+  reuse_preflight_matches: true
+  min_raw_matches_per_pair: 20
+  min_ransac_inlier_ratio: 0.20
+  min_valid_depth_ratio: 0.30
+  reprojection_median_warn_px: 5.0
+  reprojection_median_fail_px: 20.0
+  reprojection_p95_warn_px: 15.0
+  reprojection_p95_fail_px: 50.0
+  max_bad_pair_fraction: 0.25
+  min_bad_pairs_for_failure: 3
+  min_failed_relation_fraction_for_failure: 0.20
+  min_intra_valid_pairs: 3
+  min_inter_valid_pairs: 3
+  min_camera_graph_degree: 1
+  visualize_top_bad_pairs: 20
+  fail_action: stop_before_dynamic_compensation
+
+assumptions:
+  pose_backend: result_interpolation_pkl
+  result_interpolation_pkl_path: /mnt/workspace/Pose_Dynamic_Compensation/outputs/L29_run/dynamic_compensation/result_interpolation_dynamic_compensated.pkl
+  result_interpolation_image_root: images
+  result_interpolation_ego_field: ego2global_transformation_matrix_camera_reference_offset
+  result_interpolation_optimized_ego_output_field: ego2global_transformation_matrix_camera_reference_offset_optimized
+  result_interpolation_extrinsic_direction: car_to_camera
+  result_interpolation_images_undistorted: true
+  four_parameter_model: opencv_fisheye
+  eight_parameter_model: opencv_rational
+  shared_time_base: true
+  timestamp_unit: nanoseconds
+  extrapolate_navigation: true
+  semantic_backend_default: mask2former
+  semantic_mask2former_model: facebook/mask2former-swin-large-mapillary-vistas-semantic
+  semantic_mask_classes: [person, rider, bicycle, motorcycle, car, bus, truck, train, trailer, caravan, animal, vegetation, sky]
+  intra_camera_target_baselines_m: [2.0, 4.0, 6.0, 10.0]
+  max_triangulated_point_distance_m: 200.0
+  min_triangulation_angle_deg: 0.3
+  quality_threshold_mode: adaptive_mad
+  quality_threshold_mad_k: 2.0
+  quality_threshold_min_candidates: 10
+  quality_threshold_insufficient_reprojection_px: 5.0
+  quality_threshold_insufficient_ray_closest_distance_m: 0.10
+  match_quality_image_ransac_threshold_px: 50.0
+  match_quality_image_ransac_confidence: 0.999
+  intra_camera_image_ransac_threshold_px: 50.0
+  intra_camera_image_ransac_confidence: 0.999
+  pose_degraded_detection_enabled: true
+  pose_degraded_min_ransac_inliers: 10
+  pose_degraded_reprojection_median_px: 40.0
+  pose_degraded_reprojection_p75_px: 60.0
+  pose_degraded_ray_gap_median_m: 0.5
+  pose_degraded_ray_gap_p75_m: 1.0
+  pose_degraded_quality_mode: ransac_only
+  inter_camera_same_index_allowed_pairs:
+    - front_camera_fov120__front_camera_fov30
+    - front_camera_fov120__left_front_camera
+    - front_camera_fov120__right_front_camera
+    - front_camera_fov30__left_front_camera
+    - front_camera_fov30__right_front_camera
+    - rear_camera__left_rear_camera
+    - rear_camera__right_rear_camera
+  inter_camera_temporal_overlap_allowed_pairs:
+    - front_camera_fov120__front_camera_fov30
+    - front_camera_fov120__left_front_camera
+    - front_camera_fov120__right_front_camera
+    - front_camera_fov30__left_front_camera
+    - front_camera_fov30__right_front_camera
+    - rear_camera__left_rear_camera
+    - rear_camera__right_rear_camera
+    - left_front_camera__left_rear_camera
+    - right_front_camera__right_rear_camera
+  inter_camera_temporal_overlap_target_baselines_m: [12.0]
+  inter_camera_temporal_overlap_target_baselines_by_pair:
+    front_camera_fov120__front_camera_fov30: [12.0]
+    front_camera_fov120__left_front_camera: [12.0]
+    front_camera_fov120__right_front_camera: [12.0]
+    front_camera_fov30__left_front_camera: [12.0]
+    front_camera_fov30__right_front_camera: [12.0]
+    rear_camera__left_rear_camera: [7.0]
+    rear_camera__right_rear_camera: [7.0]
+    left_front_camera__left_rear_camera: [8.0]
+    right_front_camera__right_rear_camera: [8.0]
+  inter_camera_temporal_overlap_search_direction_by_pair:
+    front_camera_fov120__front_camera_fov30: front_camera_fov120__front_camera_fov30
+    front_camera_fov120__left_front_camera: front_camera_fov120__left_front_camera
+    front_camera_fov120__right_front_camera: front_camera_fov120__right_front_camera
+    front_camera_fov30__left_front_camera: front_camera_fov30__left_front_camera
+    front_camera_fov30__right_front_camera: front_camera_fov30__right_front_camera
+    rear_camera__left_rear_camera: left_rear_camera__rear_camera
+    rear_camera__right_rear_camera: right_rear_camera__rear_camera
+    left_front_camera__left_rear_camera: left_front_camera__left_rear_camera
+    right_front_camera__right_rear_camera: right_front_camera__right_rear_camera
+  inter_camera_temporal_overlap_max_frame_gap: 200
+  inter_camera_temporal_overlap_max_view_dot_by_pair:
+    front_camera_fov120__front_camera_fov30: 0.9
+    front_camera_fov120__left_front_camera: 0.9
+    front_camera_fov120__right_front_camera: 0.9
+    front_camera_fov30__left_front_camera: 0.9
+    front_camera_fov30__right_front_camera: 0.9
+    rear_camera__left_rear_camera: 0.9
+    rear_camera__right_rear_camera: 0.9
+    left_front_camera__left_rear_camera: 0.9
+    right_front_camera__right_rear_camera: 0.9
+
+delivery:
+  # Dataset normalization.
+  vehicle_model: L29
+  pose_backend: result_interpolation_pkl
+  raw_dataset_root: /mnt/workspace/Data/L29_new
+  raw_pkl: result_interpolation.pkl
+  normalize_image_root: /mnt/workspace/Data/L29_new/camera_distorted
+  canonical_root: /mnt/workspace/Data_Canonical/L29_canonical
+  base_config: configs/l29.yaml
+
+  # All non-cache artifacts for this dataset run are grouped here.
+  run_output_root: /mnt/workspace/Pose_Dynamic_Compensation/outputs/L29_run
+  reference_time_offset_s: 0.010
+
+  # Semantic segmentation.
+  semantic_cache_root: /mnt/workspace/Pose_Dynamic_Compensation/data_cache/L29/semantic_masks
+
+  # LoMa match cache.
+  match_cache_root: /mnt/workspace/Pose_Dynamic_Compensation/data_cache/L29/matches
+  match_cache_key_root: /mnt/workspace/Pose_Dynamic_Compensation/data_cache/L29/matches/loma__mask2former
+
+  # Quality control and final export.
+  dynamic_qc_sample_ratio: 0.02
+  projection_qc_sample_ratio: 0.01
+  dynamic_qc_panel_width: 1280
+  reprojection_qc_tile_width: 1280
+  reprojection_qc_tile_height: 720
+  qc_write_workers: 4
+  qc_jpeg_quality: 90
+
+  # Sensors and matching relations.
+  cameras:
+    - front_camera_fov30
+    - front_camera_fov120
+    - left_front_camera
+    - left_rear_camera
+    - rear_camera
+    - right_front_camera
+    - right_rear_camera
+  normalize_cameras:
+    - front_camera_fov30=center_camera_fov30
+    - front_camera_fov120=center_camera_fov120
+    - left_front_camera
+    - left_rear_camera
+    - rear_camera
+    - right_front_camera
+    - right_rear_camera
+  raw_lidars:
+    - front_lidar
+    - left_lidar
+    - right_lidar
+    - top_center_lidar
+  reference_cameras:
+    - front_camera_fov30
+    - front_camera_fov120
+    - left_front_camera
+    - left_rear_camera
+    - rear_camera
+    - right_front_camera
+    - right_rear_camera
+  intra_baselines_m: [2, 4, 6]
+  inter_pairs:
+    - front_camera_fov120__front_camera_fov30
+    - front_camera_fov120__left_front_camera
+    - front_camera_fov120__right_front_camera
+    - front_camera_fov30__left_front_camera
+    - front_camera_fov30__right_front_camera
+    - rear_camera__left_rear_camera
+    - rear_camera__right_rear_camera
+    - left_front_camera__left_rear_camera
+    - right_front_camera__right_rear_camera
+  inter_relations:
+    - same_index
+    - temporal_overlap
+  # Runtime range. Leave frame_count unset for a full-data run.
+  start_frame: 0
+  projection_frame_stride: 5
+  torch_device: cuda:0
+

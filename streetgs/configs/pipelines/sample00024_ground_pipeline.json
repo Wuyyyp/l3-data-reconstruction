@@ -1,0 +1,10 @@
+{
+  "source": "/mnt/nuplan/l3data-reconstruction-bingxing/samples/sample_00024_clip_M18-2_07_20251215075309_DF_f117_217_right/converted",
+  "output": "/mnt/zhoukaixuan_workspace/code/street_gaussians/output/sample00024_ground_end_to_end",
+  "ego_mask": "/mnt/nuplan/l3data-reconstruction-bingxing/tem-test/streetGS-l3-car-mesh/wys-test/sample_01020_clip_M18-2_07_20260111130529_DF_f0_100_right/converted/fixed_mask",
+  "width": 1600,
+  "workers": 4,
+  "warmup": 3000,
+  "iterations": 25000,
+  "ground_point_cap": 1200000
+}

@@ -1,0 +1,13 @@
+diff --git a/src/colmap/util/oiio_utils.h b/src/colmap/util/oiio_utils.h
+index bb47111..5dc4a7f 100644
+--- a/src/colmap/util/oiio_utils.h
++++ b/src/colmap/util/oiio_utils.h
+@@ -3 +3,8 @@
+ #include <OpenImageIO/imageio.h>
++
++// OpenImageIO added OIIO_MAKE_VERSION in 2.1.17. Ubuntu 20.04 ships
++// OpenImageIO 2.1.12, which uses the same numeric version encoding.
++#ifndef OIIO_MAKE_VERSION
++#define OIIO_MAKE_VERSION(major, minor, patch) \
++  (10000 * (major) + 100 * (minor) + (patch))
++#endif

@@ -1,0 +1,37 @@
+{
+  "0": {
+    "source": null,
+    "reason": "No ego-occlusion template supplied for this camera; all-zero exclusion",
+    "white_is_excluded": true
+  },
+  "1": {
+    "source": null,
+    "reason": "No ego-occlusion template supplied for this camera; all-zero exclusion",
+    "white_is_excluded": true
+  },
+  "2": {
+    "source": null,
+    "reason": "No ego-occlusion template supplied for this camera; all-zero exclusion",
+    "white_is_excluded": true
+  },
+  "3": {
+    "source": "/mnt/yswang-wan22/code/street_gaussians-main-restore-1021/l3-recon-mask/cam03.png",
+    "sha256": "8e10f87c4c3f377ddfa31d0870948caca78eb05af97d23e22fa30c2f41a4aec2",
+    "white_is_excluded": true
+  },
+  "4": {
+    "source": "/mnt/yswang-wan22/code/street_gaussians-main-restore-1021/l3-recon-mask/cam04.png",
+    "sha256": "7baa64ae2326f20c626d2b9e7f886c9fd8e7520c706aa25f5eebca6cab6293e2",
+    "white_is_excluded": true
+  },
+  "9": {
+    "source": null,
+    "reason": "No ego-occlusion template supplied for this camera; all-zero exclusion",
+    "white_is_excluded": true
+  },
+  "10": {
+    "source": "/mnt/yswang-wan22/code/street_gaussians-main-restore-1021/l3-recon-mask/cam10.png",
+    "sha256": "ad82b4f7ff1196a3a493160406e1f1f9a1fc3fdd8a3819dd33c051c086afb127",
+    "white_is_excluded": true
+  }
+}

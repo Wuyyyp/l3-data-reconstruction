@@ -1,0 +1,128 @@
+data:
+  box_scale: 1.35
+  cameras:
+  - 0
+  - 1
+  - 2
+  - 3
+  - 4
+  - 9
+  - 10
+  extent: 20
+  filter_colmap: true
+  load_pcd_from: false
+  regenerate_pcd: false
+  selected_frames:
+  - 0
+  - 100
+  shuffle: false
+  split_test: -1
+  split_train: 1
+  type: M18
+  use_colmap: false
+  white_background: false
+data_device: cpu
+exp_name: sample_00380_pose_ba_25000_20261001_172042
+gpus:
+- -1
+improvedgs:
+  budget: 4000000
+  edge_sample_cams: 10
+  initialization_ply: /mnt/zhoukaixuan_workspace/code/gsplat_shape_recovery_20261013/output/initialization.ply
+  stop_after: 25000
+  use_eas: false
+  use_las: true
+  use_mu: false
+  use_rap: false
+loaded_iter: -1
+mode: train
+model:
+  gaussian:
+    flip_prob: 0.0
+    fourier_dim: 5
+    fourier_scale: 1.0
+    sh_degree: 1
+  nsg:
+    include_bkgd: true
+    include_obj: false
+    include_sky: true
+    opt_track: false
+  sky:
+    coverage_weight: 0.01
+    densification_interval: 500
+    densify_until_iter: 15000
+    max_points: 100000
+    num_points: 50000
+    type: gaussian_sphere
+  use_color_correction: false
+model_path: /mnt/zhoukaixuan_workspace/code/street_gaussians/output/smoke
+optim:
+  actor_reg_start_iter: 25000
+  densification_interval: 100
+  densify_from_iter: 500
+  densify_grad_threshold: 0.0002
+  densify_until_iter: 15000
+  feature_lr: 0.0025
+  lambda_depth_lidar: 0.1
+  lambda_dssim: 0.2
+  lambda_reg: 0.0
+  lambda_sky: 0.05
+  lidar_clip:
+  - 0.1
+  - 200.0
+  lidar_weigth_decay: 1.0
+  min_opacity: 0.0075
+  opacity_lr: 0.05
+  opacity_reset_interval: 3000
+  percent_big_ws: 0.1
+  percent_dense: 0.01
+  position_lr_delay_mult: 0.01
+  position_lr_final: 1.6e-06
+  position_lr_init: 0.00016
+  position_lr_max_steps: 25000
+  rotation_lr: 0.001
+  scaling_lr: 0.005
+  semantic_lr: 0.01
+  static_prune_enabled: false
+  track_position_lr_delay_mult: 0.01
+  track_position_lr_final: 5.0e-05
+  track_position_lr_init: 0.005
+  track_position_max_steps: 30000
+  track_rotation_lr_delay_mult: 0.01
+  track_rotation_lr_final: 1.0e-05
+  track_rotation_lr_init: 0.001
+  track_rotation_max_steps: 30000
+record_dir: /mnt/zhoukaixuan_workspace/code/street_gaussians/output/smoke/record
+render:
+  backend: gsplat
+  concat_cameras:
+  - 0
+  - 1
+  - 2
+  - 3
+  - 4
+  - 9
+  - 10
+  convert_SHs_python: true
+  fps: 24
+  gsplat_densification: true
+  improvedgs_fused_outputs: true
+  save_video: false
+resolution_scales:
+- 1
+resume: true
+source_path: /mnt/zhoukaixuan_workspace/code/street_gaussians
+task: streetgs_roundtrip_7view
+to_cuda: false
+train:
+  checkpoint_iterations:
+  - 5000
+  - 10000
+  - 15000
+  - 20000
+  - 25000
+  iterations: 25000
+  save_iterations:
+  - 25000
+  test_iterations: []
+workspace: /mnt/zhoukaixuan_workspace/code/street_gaussians

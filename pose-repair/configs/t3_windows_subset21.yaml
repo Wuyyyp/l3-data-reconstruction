@@ -1,0 +1,333 @@
+dataset_root: D:/DongFeng/data/T3_full_1024_canonical
+output_root: D:/DongFeng/T3_full_1024_run
+run_name: t3_subset21
+cameras:
+  - center_camera_fov30
+  - center_camera_fov120
+  - left_front_camera
+  - left_rear_camera
+  - rear_camera
+  - right_front_camera
+  - right_rear_camera
+frame_offsets: [1, 2, 5]
+colmap:
+  mvs_backend: colmap
+  enabled: true
+  colmap_executable: D:/DongFeng/Models/COLMAP/colmap-4.2.0/bin/colmap.exe
+  ba_mode: absolute_pose_prior
+  absolute_pose_prior_colmap_executable: D:/DongFeng/Code/tools/colmap_pose_prior/bin/colmap.exe
+  ba_position_prior_sigma_m: 0.1
+  ba_rotation_prior_sigma_deg: 0.5
+  pose_variant: after
+  feature_max_image_size: 2400
+  matching_pair_offsets: [1, 2, 5]
+  matching_inter_camera_pairs: []
+  gpu_index: "0"
+  run_dense: false
+  run_bundle_adjustment: true
+  dense_max_image_size: 1280
+  patch_match_max_num_neighbors: 12
+  patch_match_num_iterations: 4
+  patch_match_num_samples: 10
+  patch_match_depth_min_m: 0.1
+  patch_match_depth_max_m: 200.0
+  patch_match_filter: true
+  patch_match_write_consistency_graph: true
+  stereo_fusion_use_cache: true
+  stereo_fusion_cache_size_gb: 16
+  colmap_pose_mask_classes: [person, rider, bicycle, motorcycle, car, bus, truck, train, trailer, caravan, animal, vegetation, sky]
+  colmap_dense_mask_classes: [person, rider, bicycle, motorcycle, car, bus, truck, train, trailer, caravan, animal, sky]
+dynamic_compensation:
+  workers: 8
+  track_workers: 4
+  cloud_cache_max_gb: 8.0
+  single_lidar_output_mode: hardlink
+semantic_segmentation:
+  processor_image_size: 1024
+  inference_dtype: fp16
+  use_fast_processor: true
+  batch_size: 4
+  write_workers: 8
+  preview_ratio: 0.01
+image_cache:
+  enabled: true
+  mode: preload
+  max_long_side: 1600
+  max_items: 5000
+matching:
+  backend: loma
+  model_device: cuda:0
+  loma_image_size: 1600
+  loma_max_keypoints: 2048
+  loma_score_threshold: 0.3
+  loma_score_threshold_intra: 0.3
+  loma_score_threshold_inter: 0.1
+  loma_feature_cache_mode: model
+  loma_feature_cache_gpu_max_items: 5000
+  loma_feature_cache_cpu_max_items: null
+  loma_process_count: 1
+  filter_workers: 4
+  overlap_filtering: true
+  visualization_pairs: 3
+  cache_visualization_pair_ratio: 0.01
+optimization:
+  pair_sample_strategy: spatial_grid_random
+  pair_sample_max_matches: 30
+  pair_sample_grid_cols: 3
+  pair_sample_grid_rows: 3
+  pair_sample_seed: 20260704
+  max_nfev: 5000
+  torch_learning_rate: 0.001
+  torch_lr_schedule: step
+  torch_lr_step_size: 200
+  torch_lr_decay: 0.5
+  torch_lr_min_factor: 0.1
+  torch_early_stopping_min_delta: 0.0001
+  torch_early_stopping_min_steps: 1000
+  inter_weight: 2.0
+
+  # Fixed mount extrinsic correction: one SE(3) delta per camera.
+  translation_bound_m: 0.15
+  rotation_bound_deg: 1.5
+  fixed_translation_l2_weight: 50000.0
+  fixed_rotation_l2_weight: 50000.0
+
+  # Camera mount time-varying disturbance: one local delta per camera-frame.
+  optimize_time_varying_disturbance: true
+  time_varying_disturbance_dof: 6
+  time_varying_rotation_bound_deg: 0.8
+  time_varying_translation_bound_m: 0.03
+  time_varying_translation_l2_weight: 50000.0
+  time_varying_rotation_l2_weight: 50000.0
+  time_varying_translation_smooth_l2_weight: 2000.0
+  time_varying_rotation_smooth_l2_weight: 2000.0
+  time_varying_translation_mean_l2_weight: 50000.0
+  time_varying_rotation_mean_l2_weight: 50000.0
+  time_varying_frame_common_translation_l2_weight: 50000.0
+  time_varying_frame_common_rotation_l2_weight: 50000.0
+
+  # Ego/body pose time-varying disturbance: one local delta per frame.
+  optimize_body_time_varying_disturbance: true
+  body_time_varying_disturbance_dof: 6
+  body_time_varying_rotation_bound_deg: 1.5
+  body_time_varying_translation_bound_m: 0.05
+  body_time_varying_translation_l2_weight: 20000.0
+  body_time_varying_rotation_l2_weight: 20000.0
+  body_time_varying_translation_smooth_l2_weight: 300.0
+  body_time_varying_rotation_smooth_l2_weight: 300.0
+
+  mode_projection_enabled: true
+
+  absorb_camera_common_mode: true
+  camera_common_mode_min_cameras: 3
+  camera_common_mode_min_median_cos: 0.5
+  camera_common_mode_min_positive_projection_fraction: 0.8
+  absorb_camera_long_term_mode: true
+  camera_long_term_mode_min_frames: 30
+  camera_long_term_mode_min_median_cos: 0.5
+  camera_long_term_mode_min_positive_projection_fraction: 0.8
+  camera_long_term_mode_min_mean_to_rms: 0.35
+preflight_diagnostic:
+  enabled: true
+  sample_strategy: temporal_stratified
+  sample_pairs_per_relation: 20
+  max_total_pairs: 800
+  random_seed: 20260704
+  reuse_preflight_matches: true
+  min_raw_matches_per_pair: 20
+  min_ransac_inlier_ratio: 0.20
+  min_valid_depth_ratio: 0.30
+  reprojection_median_warn_px: 5.0
+  reprojection_median_fail_px: 20.0
+  reprojection_p95_warn_px: 15.0
+  reprojection_p95_fail_px: 50.0
+  max_bad_pair_fraction: 0.25
+  min_bad_pairs_for_failure: 3
+  min_failed_relation_fraction_for_failure: 0.20
+  min_intra_valid_pairs: 3
+  min_inter_valid_pairs: 3
+  min_camera_graph_degree: 1
+  visualize_top_bad_pairs: 20
+  fail_action: stop_before_dynamic_compensation
+
+assumptions:
+  pose_backend: result_interpolation_pkl
+  result_interpolation_pkl_path: D:/DongFeng/data/T3_canonical/result_interpolation_standard.pkl
+  result_interpolation_image_root: images
+  result_interpolation_ego_field: ego2global_transformation_matrix
+  result_interpolation_optimized_ego_output_field: ego2global_transformation_matrix_camera_reference_offset_optimized
+  result_interpolation_extrinsic_direction: car_to_camera
+  result_interpolation_images_undistorted: true
+  four_parameter_model: opencv_fisheye
+  eight_parameter_model: opencv_rational
+  intrinsic_for_camera_images: cam_K_new
+  extrinsic_direction: camera_to_car_center
+  navigation_source: ved/LocalLocalization.csv
+  navigation_pose_direction: car_center_to_local_world
+  quaternion_order: xyzw
+  shared_time_base: true
+  timestamp_unit: nanoseconds
+  extrapolate_navigation: true
+  semantic_backend_default: mask2former
+  semantic_mask2former_model: facebook/mask2former-swin-large-mapillary-vistas-semantic
+  semantic_mask_classes: [person, rider, bicycle, motorcycle, car, bus, truck, train, trailer, caravan, animal, vegetation, sky]
+  intra_camera_target_baselines_m: [2.0, 4.0, 6.0]
+  max_triangulated_point_distance_m: 200.0
+  min_triangulation_angle_deg: 0.3
+  quality_threshold_mode: adaptive_mad
+  quality_threshold_mad_k: 2.0
+  quality_threshold_min_candidates: 10
+  quality_threshold_insufficient_reprojection_px: 5.0
+  quality_threshold_insufficient_ray_closest_distance_m: 0.10
+  match_quality_image_ransac_threshold_px: 50.0
+  match_quality_image_ransac_confidence: 0.999
+  intra_camera_image_ransac_threshold_px: 50.0
+  intra_camera_image_ransac_confidence: 0.999
+  pose_degraded_detection_enabled: true
+  pose_degraded_min_ransac_inliers: 10
+  pose_degraded_reprojection_median_px: 40.0
+  pose_degraded_reprojection_p75_px: 60.0
+  pose_degraded_ray_gap_median_m: 0.5
+  pose_degraded_ray_gap_p75_m: 1.0
+  pose_degraded_quality_mode: ransac_only
+  inter_camera_same_index_allowed_pairs:
+    - center_camera_fov120__left_front_camera
+    - center_camera_fov120__right_front_camera
+    - center_camera_fov30__left_front_camera
+    - center_camera_fov30__right_front_camera
+    - rear_camera__left_rear_camera
+    - rear_camera__right_rear_camera
+  inter_camera_temporal_overlap_allowed_pairs:
+    - center_camera_fov120__center_camera_fov30
+    - center_camera_fov120__left_front_camera
+    - center_camera_fov120__right_front_camera
+    - center_camera_fov30__left_front_camera
+    - center_camera_fov30__right_front_camera
+    - rear_camera__left_rear_camera
+    - rear_camera__right_rear_camera
+    - left_front_camera__left_rear_camera
+    - right_front_camera__right_rear_camera
+  inter_camera_temporal_overlap_target_baselines_m: [12.0]
+  inter_camera_temporal_overlap_target_baselines_by_pair:
+    center_camera_fov120__center_camera_fov30: [12.0]
+    center_camera_fov120__left_front_camera: [12.0]
+    center_camera_fov120__right_front_camera: [12.0]
+    center_camera_fov30__left_front_camera: [12.0]
+    center_camera_fov30__right_front_camera: [12.0]
+    rear_camera__left_rear_camera: [7.0]
+    rear_camera__right_rear_camera: [7.0]
+    left_front_camera__left_rear_camera: [8.0]
+    right_front_camera__right_rear_camera: [8.0]
+  inter_camera_temporal_overlap_search_direction_by_pair:
+    center_camera_fov120__center_camera_fov30: center_camera_fov120__center_camera_fov30
+    center_camera_fov120__left_front_camera: center_camera_fov120__left_front_camera
+    center_camera_fov120__right_front_camera: center_camera_fov120__right_front_camera
+    center_camera_fov30__left_front_camera: center_camera_fov30__left_front_camera
+    center_camera_fov30__right_front_camera: center_camera_fov30__right_front_camera
+    rear_camera__left_rear_camera: left_rear_camera__rear_camera
+    rear_camera__right_rear_camera: right_rear_camera__rear_camera
+    left_front_camera__left_rear_camera: left_front_camera__left_rear_camera
+    right_front_camera__right_rear_camera: right_front_camera__right_rear_camera
+  inter_camera_temporal_overlap_max_frame_gap: 200
+  inter_camera_temporal_overlap_max_view_dot_by_pair:
+    center_camera_fov120__center_camera_fov30: 1.0
+    center_camera_fov120__left_front_camera: 0.9
+    center_camera_fov120__right_front_camera: 0.9
+    center_camera_fov30__left_front_camera: 0.9
+    center_camera_fov30__right_front_camera: 0.9
+    rear_camera__left_rear_camera: 0.9
+    rear_camera__right_rear_camera: 0.9
+    left_front_camera__left_rear_camera: 0.9
+    right_front_camera__right_rear_camera: 0.9
+
+delivery:
+  # Dataset normalization.
+  vehicle_model: T3
+  pose_backend: ved_localization
+  raw_dataset_root: D:/DongFeng/data/2026_03_05_16_38_30_dlp_pilotGtParser
+  canonical_root: D:/DongFeng/data/T3_full_1024_canonical
+  base_config: configs/t3_windows_subset21.yaml
+  run_output_root: D:/DongFeng/T3_subset21_run
+
+  # Dynamic-object compensation.
+  dynamic_output_root: D:/DongFeng/T3_full_1024_run/dynamic_compensation
+  dynamic_pkl: D:/DongFeng/T3_full_1024_run/dynamic_compensation/result_interpolation_dynamic_compensated.pkl
+  reference_time_offset_s: 0.0
+
+  # Semantic segmentation.
+  semantic_cache_root: D:/DongFeng/data_cache/T3/semantic_masks_1024
+
+  # LoMa match cache.
+  match_cache_root: D:/DongFeng/data_cache/T3/matches_1024
+  match_cache_key_root: D:/DongFeng/data_cache/T3/matches_1024/loma__mask2former
+
+  # Optimization, quality control, and final export.
+  optimization_output_root: D:/DongFeng/T3_full_1024_run/joint_optimization
+  projection_qc_root: D:/DongFeng/T3_full_1024_run/quality_control
+  dynamic_qc_sample_ratio: 0.02
+  projection_qc_sample_ratio: 0.01
+  dynamic_qc_panel_width: 1280
+  reprojection_qc_tile_width: 1280
+  reprojection_qc_tile_height: 720
+  qc_write_workers: 4
+  qc_jpeg_quality: 90
+  deliverable_root: D:/DongFeng/T3_full_1024_run/deliverables
+
+  # Sensors and matching relations.
+  cameras:
+    - center_camera_fov30
+    - center_camera_fov120
+    - left_front_camera
+    - left_rear_camera
+    - rear_camera
+    - right_front_camera
+    - right_rear_camera
+  normalize_cameras:
+    - center_camera_fov30
+    - center_camera_fov120
+    - left_front_camera
+    - left_rear_camera
+    - rear_camera
+    - right_front_camera
+    - right_rear_camera
+  raw_lidars:
+    - front_lidar
+  reference_cameras:
+    - center_camera_fov30
+    - center_camera_fov120
+    - left_front_camera
+    - left_rear_camera
+    - rear_camera
+    - right_front_camera
+    - right_rear_camera
+  intra_baselines_m: [2, 6]
+  inter_pairs:
+    - center_camera_fov120__center_camera_fov30
+    - center_camera_fov120__left_front_camera
+    - center_camera_fov120__right_front_camera
+    - left_front_camera__left_rear_camera
+    - right_front_camera__right_rear_camera
+    - rear_camera__left_rear_camera
+    - rear_camera__right_rear_camera
+  inter_relations:
+    - same_index
+  inter_relations_by_pair:
+    center_camera_fov120__center_camera_fov30:
+      - temporal_overlap_12m
+    center_camera_fov120__left_front_camera:
+      - same_index
+    center_camera_fov120__right_front_camera:
+      - same_index
+    left_front_camera__left_rear_camera:
+      - temporal_overlap_8m
+    right_front_camera__right_rear_camera:
+      - temporal_overlap_8m
+    rear_camera__left_rear_camera:
+      - same_index
+    rear_camera__right_rear_camera:
+      - same_index
+  # Runtime range. Leave frame_count unset for a full-data run.
+  start_frame: 0
+  projection_frame_stride: 5
+  torch_device: cuda:0
+

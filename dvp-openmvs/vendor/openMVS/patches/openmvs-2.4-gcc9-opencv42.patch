@@ -1,0 +1,28 @@
+diff --git a/libs/Common/Config.h b/libs/Common/Config.h
+index eedbad2..ee72d75 100644
+--- a/libs/Common/Config.h
++++ b/libs/Common/Config.h
+@@ -232,7 +232,7 @@
+ #ifdef _MSC_VER
+ #	define DEBUG_BREAK __debugbreak
+ #else
+-#if defined(__has_builtin) && __has_builtin(__builtin_debugtrap)
++#if defined(__clang__)
+ #	define DEBUG_BREAK __builtin_debugtrap
+ #else
+ # if defined(__i386__) || defined(__x86_64__)
+diff --git a/libs/Common/Types.inl b/libs/Common/Types.inl
+index 2b998c8..6593336 100644
+--- a/libs/Common/Types.inl
++++ b/libs/Common/Types.inl
+@@ -3105,10 +3105,6 @@ static bool SaveImage(const cv::Mat& img, const String& fileName)
+ 		compression_params.push_back(cv::IMWRITE_JPEG_QUALITY);
+ 		compression_params.push_back(95);
+ 	} else
+-	if (ext == ".jxl") {
+-		compression_params.push_back(cv::IMWRITE_JPEGXL_QUALITY);
+-		compression_params.push_back(95);
+-	} else
+ 	if (ext == ".pfm") {
+ 		if (img.depth() != CV_32F)
+ 			return false;

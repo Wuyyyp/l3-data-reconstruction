@@ -1,0 +1,12 @@
+numpy>=1.24,<2
+scipy>=1.10
+opencv-python-headless>=4.8
+imageio-ffmpeg>=0.4.9
+PyYAML>=6.0
+Pillow>=10
+trimesh>=4.0
+pyglet==1.5.31
+pyrender>=0.1.45
+psutil>=5.9
+setuptools<82
+sam3 @ git+https://github.com/facebookresearch/sam3.git@7f473cfd983d5eb43040ff608f66bff0d7bdcb53

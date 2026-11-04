@@ -1,0 +1,4 @@
+# Run in streetgs/ after installing the matching CUDA torch and NVCC.
+./submodules/simple-knn
+./submodules/diff-gaussian-rasterization
+./submodules/fused-ssim

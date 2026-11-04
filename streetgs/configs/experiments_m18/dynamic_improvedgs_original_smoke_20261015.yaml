@@ -1,0 +1,200 @@
+data:
+  box_scale: 1.35
+  cameras:
+  - 0
+  - 1
+  - 2
+  - 3
+  - 4
+  - 9
+  - 10
+  eval: true
+  extent: 20.0
+  filter_colmap: true
+  images: images
+  load_pcd_from: false
+  regenerate_pcd: false
+  selected_frames:
+  - 0
+  - 100
+  shuffle: false
+  split_test: -1
+  split_train: 1
+  type: M18
+  use_colmap: false
+  use_colmap_pose: false
+  use_mono_depth: false
+  use_mono_normal: false
+  use_semantic: false
+  white_background: false
+  streaming_load: false
+  streaming_defer_start: true
+  camera_workers: 0
+  streaming_cache_gib: 32
+data_device: cpu
+debug: false
+eval:
+  eval_test: true
+  eval_train: false
+  quiet: false
+  skip_test: false
+  skip_train: false
+exp_name: dynamic_efficiency_ba_20261013
+gpus:
+- -1
+ip: 127.0.0.1
+loaded_iter: -1
+mode: train
+model:
+  color_correction:
+    mode: image
+    use_mlp: false
+    use_sky: false
+  gaussian:
+    flip_prob: 0.0
+    fourier_dim: 5
+    fourier_scale: 1.0
+    semantic_mode: logits
+    sh_degree: 1
+  nsg:
+    include_bkgd: true
+    include_obj: true
+    include_sky: true
+    opt_track: true
+  pose_correction:
+    mode: image
+  sky:
+    resolution: 1024
+    white_background: true
+    type: gaussian_sphere
+    num_points: 50000
+    max_points: 100000
+    densify_until_iter: 15000
+    densification_interval: 500
+    coverage_weight: 0.01
+  use_color_correction: false
+  use_pose_correction: false
+model_path: /mnt/zhoukaixuan_workspace/code/street_gaussians/output/dynamic_improvedgs_streaming_20261015/original/smoke
+optim:
+  actor_reg_start_iter: 25000
+  densification_interval: 100
+  densify_from_iter: 500
+  densify_grad_abs_bkgd: true
+  densify_grad_abs_obj: false
+  densify_grad_threshold: 0.0002
+  densify_grad_threshold_bkgd: 0.0006
+  densify_grad_threshold_obj: 0.0002
+  densify_until_iter: 15000
+  feature_lr: 0.0025
+  fixed_gaussians: false
+  lambda_color_correction: 0.0
+  lambda_depth_lidar: 0.1
+  lambda_depth_mono: 0.0
+  lambda_dssim: 0.2
+  lambda_l1: 1.0
+  lambda_mask: 0.1
+  lambda_normal_mono: 0.0
+  lambda_opacity_sparse: 0.0
+  lambda_pose_correction: 0.0
+  lambda_reg: 0.1
+  lambda_scale_flatten: 0.0
+  lambda_semantic: 0.0
+  lambda_sky: 0.05
+  lambda_sky_scale: []
+  lidar_clip:
+  - 0.1
+  - 200.0
+  lidar_weigth_decay: 1.0
+  max_screen_size: 20
+  min_opacity: 0.0075
+  opacity_lr: 0.05
+  opacity_reset_interval: 3000
+  percent_big_ws: 0.1
+  percent_dense: 0.01
+  position_lr_delay_mult: 0.01
+  position_lr_final: 1.6e-06
+  position_lr_init: 0.00016
+  position_lr_max_steps: 25000
+  prune_box_interval: 100
+  rotation_lr: 0.001
+  scaling_lr: 0.005
+  semantic_lr: 0.01
+  static_prune_cdf_threshold: 0.99
+  static_prune_enabled: false
+  static_prune_interval: 5000
+  static_prune_until_iter: -1
+  track_position_lr_delay_mult: 0.01
+  track_position_lr_final: 5.0e-05
+  track_position_lr_init: 0.005
+  track_position_max_steps: 30000
+  track_rotation_lr_delay_mult: 0.01
+  track_rotation_lr_final: 1.0e-05
+  track_rotation_lr_init: 0.001
+  track_rotation_max_steps: 30000
+point_cloud_dir: /mnt/zhoukaixuan_workspace/code/street_gaussians/output/dynamic_improvedgs_streaming_20261015/original/smoke/point_cloud
+port: 6009
+record_dir: /mnt/zhoukaixuan_workspace/code/street_gaussians/output/dynamic_improvedgs_streaming_20261015/original/smoke/record
+render:
+  backend: gsplat
+  batch_actor_pose: false
+  batch_actor_world: false
+  batch_actor_xyz: false
+  cache_fourier: false
+  compute_cov3D_python: false
+  concat_cameras:
+  - 0
+  - 1
+  - 2
+  - 3
+  - 4
+  - 9
+  - 10
+  convert_SHs_python: true
+  coord: world
+  debug: false
+  fast_actor_pose: false
+  fast_actor_transform: false
+  fps: 24
+  gsplat_densification: true
+  gsplat_packed: true
+  gsplat_radius_clip: 0.0
+  render_diagnostics: false
+  render_layers: false
+  render_normal: false
+  reuse_ego_rotation: false
+  save_image: true
+  save_video: false
+  scaling_modifier: 1.0
+  skip_empty_actor_flip: false
+resolution: -1
+resolution_scales:
+- 1
+resume: true
+source_path: /mnt/zhoukaixuan_workspace/code/street_gaussians/runs/dynamic_efficiency_20261013/converted
+task: streetgs_roundtrip_7view
+to_cuda: false
+train:
+  checkpoint_iterations:
+  - 2500
+  - 5000
+  - 7500
+  - 10000
+  - 12500
+  - 15000
+  - 17500
+  - 20000
+  - 22500
+  - 25000
+  debug_from: -1
+  detect_anomaly: false
+  importance_sampling: false
+  iterations: 25000
+  quiet: false
+  save_iterations:
+  - 25000
+  start_checkpoint: null
+  test_iterations: []
+trained_model_dir: /mnt/zhoukaixuan_workspace/code/street_gaussians/output/dynamic_improvedgs_streaming_20261015/original/smoke/trained_model
+viewer:
+  frame_id: 0
+workspace: /mnt/zhoukaixuan_workspace/code/street_gaussians

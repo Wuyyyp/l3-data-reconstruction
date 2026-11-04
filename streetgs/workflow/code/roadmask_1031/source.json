@@ -1,0 +1,19 @@
+{
+  "scripts": {
+    "run_road_semantic_masks.py": {
+      "source": "/data/l3_data_test/street_gaussians/scripts/run_road_semantic_masks.py",
+      "source_sha": "e218d02b218b2d30f4be00a1602b2e8f39bf5b6bdb50b70875d2b6c2617e364d",
+      "batch_sha": "68a70d340d2eeb821b2fadaaff68b7d2f67db6dd6a38119d0f659a6d27770b1c"
+    },
+    "refine_road_semantic_masks.py": {
+      "source": "/data/l3_data_test/street_gaussians/scripts/refine_road_semantic_masks.py",
+      "source_sha": "48145ca571591a70b81c8b9a0745fe70d860a43f9ee7833a2b0e4264bd219d1e",
+      "batch_sha": "ad87115f136da0093ff7c77d0e9b3c62e5038413ecd268f619b99c8ce3aceee4"
+    }
+  },
+  "weights": {
+    "config.json": "a630f6e89d468f197b6995b28a96a7b6c2a1c925eff30d43bafee0cbdd3efaeb",
+    "preprocessor_config.json": "6073ac6a37530ed2a19443d6a748f5579887b3ae48f6730073954b0b38cf3fd6",
+    "model.safetensors": "1ed65f56d8c76fc7e11988ed5b7b4302e1c78706ea86583a54c1c9e07133c1d5"
+  }
+}

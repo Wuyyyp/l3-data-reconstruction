@@ -1,0 +1,357 @@
+diff --git a/src/colmap/estimators/bundle_adjustment_ceres.cc b/src/colmap/estimators/bundle_adjustment_ceres.cc
+index df15b17..b575a64 100644
+--- a/src/colmap/estimators/bundle_adjustment_ceres.cc
++++ b/src/colmap/estimators/bundle_adjustment_ceres.cc
+@@ -245,6 +245,12 @@ bool CeresPosePriorBundleAdjustmentOptions::Check() const {
+   return true;
+ }
+ 
++bool CeresAbsolutePosePriorBundleAdjustmentOptions::Check() const {
++  CHECK_OPTION_GT(position_sigma, 0);
++  CHECK_OPTION_GT(rotation_sigma, 0);
++  return true;
++}
++
+ namespace {
+ 
+ struct FixedGaugeWithThreePoints {
+@@ -1110,6 +1116,102 @@ class PosePriorBundleAdjuster : public CeresBundleAdjuster {
+   Sim3d normalized_from_metric_;
+ };
+ 
++class WeightedAbsolutePosePriorCostFunctor
++    : public AutoDiffCostFunctor<WeightedAbsolutePosePriorCostFunctor, 6, 7> {
++ public:
++  WeightedAbsolutePosePriorCostFunctor(const Rigid3d& sensor_from_world_prior,
++                                       const double rotation_sigma,
++                                       const double position_sigma)
++      : prior_(sensor_from_world_prior),
++        rotation_weight_(1.0 / rotation_sigma),
++        position_weight_(1.0 / position_sigma) {}
++
++  template <typename T>
++  bool operator()(const T* const sensor_from_world, T* residuals) const {
++    T unweighted[6];
++    prior_(sensor_from_world, unweighted);
++    for (int i = 0; i < 3; ++i) {
++      residuals[i] = T(rotation_weight_) * unweighted[i];
++      residuals[i + 3] = T(position_weight_) * unweighted[i + 3];
++    }
++    return true;
++  }
++
++ private:
++  AbsolutePosePriorCostFunctor prior_;
++  double rotation_weight_;
++  double position_weight_;
++};
++
++class AbsolutePosePriorBundleAdjuster : public CeresBundleAdjuster {
++ public:
++  AbsolutePosePriorBundleAdjuster(
++      const BundleAdjustmentOptions& options,
++      const CeresAbsolutePosePriorBundleAdjustmentOptions& prior_options,
++      const BundleAdjustmentConfig& config,
++      std::vector<AbsolutePosePrior> pose_priors,
++      Reconstruction& reconstruction)
++      : CeresBundleAdjuster(options, config),
++        prior_options_(prior_options),
++        pose_priors_(std::move(pose_priors)),
++        reconstruction_(reconstruction) {
++    THROW_CHECK(prior_options_.Check());
++    default_bundle_adjuster_ = std::make_unique<DefaultBundleAdjuster>(
++        options_, config_, reconstruction_);
++    size_t added = 0;
++    for (const auto& pose_prior : pose_priors_) {
++      if (!config_.HasImage(pose_prior.image_id)) {
++        continue;
++      }
++      Image& image = reconstruction_.Image(pose_prior.image_id);
++      THROW_CHECK(image.IsRefInFrame())
++          << "Full absolute pose priors require a reference sensor image";
++      Rigid3d& sensor_from_world = image.FramePtr()->RigFromWorld();
++      ceres::Problem& problem = *default_bundle_adjuster_->Problem();
++      const bool is_new_parameter_block =
++          !problem.HasParameterBlock(sensor_from_world.params.data());
++      problem.AddResidualBlock(
++          WeightedAbsolutePosePriorCostFunctor::Create(
++              pose_prior.sensor_from_world,
++              prior_options_.rotation_sigma,
++              prior_options_.position_sigma),
++          nullptr,
++          sensor_from_world.params.data());
++      if (is_new_parameter_block) {
++        SetManifold(&problem,
++                    sensor_from_world.params.data(),
++                    CreateProductManifold(CreateEigenQuaternionManifold(),
++                                          CreateEuclideanManifold<3>()));
++      }
++      ++added;
++    }
++    THROW_CHECK_GT(added, 0) << "No full pose priors were attached";
++    LOG(INFO) << "Added " << added << " full SE(3) pose priors";
++  }
++
++  std::shared_ptr<BundleAdjustmentSummary> Solve() override {
++    std::shared_ptr<ceres::Problem> problem = default_bundle_adjuster_->Problem();
++    ceres::Solver::Summary ceres_summary =
++        SolveWithGpuFallback(options_, config_, problem.get());
++    if (options_.print_summary || VLOG_IS_ON(1)) {
++      PrintSolverSummary(ceres_summary,
++                         "Absolute pose prior bundle adjustment report");
++    }
++    return CreateSummaryAndLogFailure(std::move(ceres_summary),
++                                      "Absolute pose prior bundle adjustment");
++  }
++
++  std::shared_ptr<ceres::Problem>& Problem() override {
++    return default_bundle_adjuster_->Problem();
++  }
++
++ private:
++  CeresAbsolutePosePriorBundleAdjustmentOptions prior_options_;
++  std::vector<AbsolutePosePrior> pose_priors_;
++  Reconstruction& reconstruction_;
++  std::unique_ptr<DefaultBundleAdjuster> default_bundle_adjuster_;
++};
++
+ }  // namespace
+ 
+ std::unique_ptr<CeresBundleAdjuster> CreateDefaultCeresBundleAdjuster(
+@@ -1130,6 +1232,17 @@ std::unique_ptr<CeresBundleAdjuster> CreatePosePriorCeresBundleAdjuster(
+       options, prior_options, config, std::move(pose_priors), reconstruction);
+ }
+ 
++std::unique_ptr<CeresBundleAdjuster>
++CreateAbsolutePosePriorCeresBundleAdjuster(
++    const BundleAdjustmentOptions& options,
++    const CeresAbsolutePosePriorBundleAdjustmentOptions& prior_options,
++    const BundleAdjustmentConfig& config,
++    std::vector<AbsolutePosePrior> pose_priors,
++    Reconstruction& reconstruction) {
++  return std::make_unique<AbsolutePosePriorBundleAdjuster>(
++      options, prior_options, config, std::move(pose_priors), reconstruction);
++}
++
+ void PrintSolverSummary(const ceres::Solver::Summary& summary,
+                         const std::string& header) {
+   if (VLOG_IS_ON(3)) {
+diff --git a/src/colmap/estimators/bundle_adjustment_ceres.h b/src/colmap/estimators/bundle_adjustment_ceres.h
+index a51f4bb..cc928d5 100644
+--- a/src/colmap/estimators/bundle_adjustment_ceres.h
++++ b/src/colmap/estimators/bundle_adjustment_ceres.h
+@@ -119,6 +119,20 @@ class CeresBundleAdjuster : public BundleAdjuster {
+   virtual std::shared_ptr<ceres::Problem>& Problem() = 0;
+ };
+ 
++// A complete metric pose prior for a registered camera image. The pose uses
++// COLMAP's sensor_from_world (world-to-camera) convention.
++struct AbsolutePosePrior {
++  image_t image_id = kInvalidImageId;
++  Rigid3d sensor_from_world;
++};
++
++struct CeresAbsolutePosePriorBundleAdjustmentOptions {
++  double position_sigma = 0.1;
++  double rotation_sigma = DegToRad(0.5);
++
++  bool Check() const;
++};
++
+ std::unique_ptr<CeresBundleAdjuster> CreateDefaultCeresBundleAdjuster(
+     const BundleAdjustmentOptions& options,
+     const BundleAdjustmentConfig& config,
+@@ -131,6 +145,14 @@ std::unique_ptr<CeresBundleAdjuster> CreatePosePriorCeresBundleAdjuster(
+     std::vector<PosePrior> pose_priors,
+     Reconstruction& reconstruction);
+ 
++std::unique_ptr<CeresBundleAdjuster>
++CreateAbsolutePosePriorCeresBundleAdjuster(
++    const BundleAdjustmentOptions& options,
++    const CeresAbsolutePosePriorBundleAdjustmentOptions& prior_options,
++    const BundleAdjustmentConfig& config,
++    std::vector<AbsolutePosePrior> pose_priors,
++    Reconstruction& reconstruction);
++
+ void PrintSolverSummary(const ceres::Solver::Summary& summary,
+                         const std::string& header);
+ 
+diff --git a/src/colmap/exe/colmap.cc b/src/colmap/exe/colmap.cc
+index da412fe..1c735bd 100644
+--- a/src/colmap/exe/colmap.cc
++++ b/src/colmap/exe/colmap.cc
+@@ -117,6 +117,9 @@ int main(int argc, char** argv) {
+                         &colmap::RunAutomaticReconstructor);
+   commands.emplace_back(
+       "bundle_adjuster", &colmap::RunBundleAdjuster, kSupportsGracefulShutdown);
++  commands.emplace_back("absolute_pose_prior_bundle_adjuster",
++                        &colmap::RunAbsolutePosePriorBundleAdjuster,
++                        kSupportsGracefulShutdown);
+   commands.emplace_back("color_extractor", &colmap::RunColorExtractor);
+   commands.emplace_back("database_cleaner", &colmap::RunDatabaseCleaner);
+   commands.emplace_back("database_creator", &colmap::RunDatabaseCreator);
+diff --git a/src/colmap/exe/sfm.cc b/src/colmap/exe/sfm.cc
+index fe5a810..6d1a736 100644
+--- a/src/colmap/exe/sfm.cc
++++ b/src/colmap/exe/sfm.cc
+@@ -36,6 +36,7 @@
+ #include "colmap/controllers/option_manager.h"
+ #include "colmap/controllers/rotation_averaging.h"
+ #include "colmap/estimators/bundle_adjustment.h"
++#include "colmap/estimators/bundle_adjustment_ceres.h"
+ #include "colmap/estimators/solvers/similarity_transform.h"
+ #include "colmap/estimators/view_graph_calibration.h"
+ #include "colmap/exe/gui.h"
+@@ -49,6 +50,11 @@
+ #include <boost/property_tree/json_parser.hpp>
+ #include <boost/property_tree/ptree.hpp>
+ 
++#include <cmath>
++#include <fstream>
++#include <sstream>
++#include <unordered_map>
++
+ namespace colmap {
+ namespace {
+ 
+@@ -218,6 +224,127 @@ int RunBundleAdjuster(int argc, char** argv) {
+   return EXIT_SUCCESS;
+ }
+ 
++int RunAbsolutePosePriorBundleAdjuster(int argc, char** argv) {
++  std::filesystem::path input_path;
++  std::filesystem::path output_path;
++  std::filesystem::path pose_csv;
++  double position_prior_sigma_m = 0.1;
++  double rotation_prior_sigma_deg = 0.5;
++
++  OptionManager options;
++  options.AddRequiredOption("input_path", &input_path);
++  options.AddRequiredOption("output_path", &output_path);
++  options.AddRequiredOption("pose_csv", &pose_csv);
++  options.AddDefaultOption("position_prior_sigma_m", &position_prior_sigma_m);
++  options.AddDefaultOption("rotation_prior_sigma_deg", &rotation_prior_sigma_deg);
++  options.AddBundleAdjustmentOptions();
++  if (!options.Parse(argc, argv)) {
++    return EXIT_FAILURE;
++  }
++  if (!ExistsDir(input_path) || !ExistsDir(output_path)) {
++    LOG(ERROR) << "`input_path` and `output_path` must be directories";
++    return EXIT_FAILURE;
++  }
++  if (!ExistsFile(pose_csv)) {
++    LOG(ERROR) << "`pose_csv` does not exist";
++    return EXIT_FAILURE;
++  }
++
++  auto split_csv = [](const std::string& line) {
++    std::vector<std::string> fields;
++    std::stringstream stream(line);
++    std::string field;
++    while (std::getline(stream, field, ',')) {
++      fields.push_back(field);
++    }
++    return fields;
++  };
++  std::ifstream stream(pose_csv);
++  std::string line;
++  if (!std::getline(stream, line)) {
++    LOG(ERROR) << "Pose CSV has no header: " << pose_csv;
++    return EXIT_FAILURE;
++  }
++  const std::vector<std::string> header = split_csv(line);
++  std::unordered_map<std::string, size_t> column;
++  for (size_t index = 0; index < header.size(); ++index) {
++    column.emplace(header[index], index);
++  }
++  const auto require_column = [&column](const std::string& name) {
++    const auto it = column.find(name);
++    THROW_CHECK(it != column.end()) << "Pose CSV is missing column: " << name;
++    return it->second;
++  };
++  const size_t camera_column = require_column("camera");
++  const size_t filename_column = require_column("image_filename");
++  std::array<size_t, 12> matrix_columns;
++  for (int row = 0; row < 3; ++row) {
++    for (int col = 0; col < 4; ++col) {
++      matrix_columns[4 * row + col] =
++          require_column("T_cw_" + std::to_string(row) + std::to_string(col));
++    }
++  }
++  std::unordered_map<std::string, Rigid3d> priors_by_name;
++  while (std::getline(stream, line)) {
++    const std::vector<std::string> fields = split_csv(line);
++    if (fields.size() != header.size()) {
++      LOG(WARNING) << "Skipping malformed pose CSV row";
++      continue;
++    }
++    Eigen::Matrix3d rotation;
++    Eigen::Vector3d translation;
++    for (int row = 0; row < 3; ++row) {
++      for (int col = 0; col < 3; ++col) {
++        rotation(row, col) = std::stod(fields[matrix_columns[4 * row + col]]);
++      }
++      translation(row) = std::stod(fields[matrix_columns[4 * row + 3]]);
++    }
++    const std::string name = fields[camera_column] + "/" + fields[filename_column];
++    priors_by_name.emplace(
++        name, Inverse(Rigid3d(Eigen::Quaterniond(rotation), translation)));
++  }
++
++  Reconstruction reconstruction;
++  reconstruction.Read(input_path);
++  ObservationManager(reconstruction).FilterObservationsWithNegativeDepth();
++  BundleAdjustmentConfig config;
++  std::vector<AbsolutePosePrior> priors;
++  for (const image_t image_id : reconstruction.RegImageIds()) {
++    const Image& image = reconstruction.Image(image_id);
++    config.AddImage(image_id);
++    config.SetConstantCamIntrinsics(image.CameraId());
++    config.SetConstantSensorFromRigPose(image.CameraPtr()->SensorId());
++    const auto prior_it = priors_by_name.find(image.Name());
++    if (prior_it == priors_by_name.end()) {
++      LOG(ERROR) << "No pose prior for registered image: " << image.Name();
++      return EXIT_FAILURE;
++    }
++    priors.push_back({image_id, prior_it->second});
++  }
++  if (priors.empty()) {
++    LOG(ERROR) << "Input reconstruction has no registered images";
++    return EXIT_FAILURE;
++  }
++  BundleAdjustmentOptions ba_options = *options.bundle_adjustment;
++  ba_options.refine_focal_length = false;
++  ba_options.refine_principal_point = false;
++  ba_options.refine_extra_params = false;
++  ba_options.refine_sensor_from_rig = false;
++  CeresAbsolutePosePriorBundleAdjustmentOptions prior_options;
++  prior_options.position_sigma = position_prior_sigma_m;
++  prior_options.rotation_sigma = rotation_prior_sigma_deg * M_PI / 180.0;
++  auto adjuster = CreateAbsolutePosePriorCeresBundleAdjuster(
++      ba_options, prior_options, config, std::move(priors), reconstruction);
++  const auto summary = adjuster->Solve();
++  if (!summary->IsSolutionUsable()) {
++    LOG(ERROR) << summary->BriefReport();
++    return EXIT_FAILURE;
++  }
++  reconstruction.UpdatePoint3DErrors();
++  reconstruction.Write(output_path);
++  return EXIT_SUCCESS;
++}
++
+ int RunColorExtractor(int argc, char** argv) {
+   std::filesystem::path input_path;
+   std::filesystem::path output_path;
+diff --git a/src/colmap/exe/sfm.h b/src/colmap/exe/sfm.h
+index 26a18d2..b6f02f3 100644
+--- a/src/colmap/exe/sfm.h
++++ b/src/colmap/exe/sfm.h
+@@ -75,6 +75,7 @@ bool RunHierarchicalMapperImpl(
+ 
+ int RunAutomaticReconstructor(int argc, char** argv);
+ int RunBundleAdjuster(int argc, char** argv);
++int RunAbsolutePosePriorBundleAdjuster(int argc, char** argv);
+ int RunColorExtractor(int argc, char** argv);
+ int RunMapper(int argc, char** argv);
+ int RunGlobalMapper(int argc, char** argv);
+

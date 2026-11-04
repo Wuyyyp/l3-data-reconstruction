@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dongfeng-registration"
+version = "0.1.0"
+description = "Multi-camera temporal correspondence and geometric error evaluation."
+requires-python = ">=3.11"
+dependencies = [
+  "numpy",
+  "scipy",
+  "pandas",
+  "pyarrow",
+  "matplotlib",
+  "PyYAML",
+  "pydantic>=2",
+  "typer",
+  "rich",
+  "opencv-python",
+  "pillow",
+  "torch",
+  "transformers>=4.40",
+]
+
+[project.optional-dependencies]
+performance = [
+  "python-lzf",
+]
+
+[project.scripts]
+dongfeng-registration = "dongfeng_registration.cli:app"
+dongfeng-segment-dynamic = "dongfeng_registration.semantic_cli:app"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"

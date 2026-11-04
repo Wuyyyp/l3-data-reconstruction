@@ -1,0 +1,19 @@
+{
+  "source": "/mnt/zhoukaixuan_workspace/code/street_gaussians/output/sample00024_static_anchored_20261026/code",
+  "mandatory_ground_split": true,
+  "code_hashes": {
+    "ground_extension.py": "de96fc7690111d489beddc7ddefbedb3fd86741ac0699d1e928ecfe0e61df4b3",
+    "train.py": "cd868332261e3cf1494a92e2002134fd5c8e52929f3b2fef77315252eaa7a5aa",
+    "diagnose_sky_sampling.py": "f18aae7d15028a6f0a4f4ba5c4e5b052b711f13d43833e50dabc825e6b1e85bf",
+    "mesh_reader.py": "860740aad79f23b5505acda38817099d9b642650395e21aa884b6239ab7364a0",
+    "test_topology.py": "8e496efe7054fab9f1be8c3ef5ada7d1053abcd08032df25c99df3acc1af0467",
+    "evaluate_grounded.py": "94f0465d4b1f8b1099a7a7be962cc7a47cf3a5e7f1e309bf5ef5d16598dadb00",
+    "bridge.py": "004dc05b12e7288d057c4feba440818155c498561449131c10f018936b651a38",
+    "async_pipeline.py": "e7e46aacd16cdc6e57d62dd6a3824f24669226d9cb12c9b0b8c1543d71294dfd",
+    "__init__.py": "32fe25b23d06dc5a8201c535e1962e436c63c350da2a53e2a0b70247fe00a65e",
+    "evaluate.py": "412c15dd5f4372b45b22375def9120b7a569ae930d813edbf34167d93cd3b6a4",
+    "adaptive_ground.py": "9cf0394588ee031e04e3223cdd8f671625c41ac401935de5a2e74076ccd99562",
+    "run_prepared.py": "5f190826a31f6e9e4de40c10a68ed88f7e8c4336addc02a0c61188f207de58d6",
+    "mesh_backend.py": "9302c3cb641dabe54b0820fdba44a09c1c5c4886b60f3059f1b19201ed6b3e3b"
+  }
+}

@@ -1,0 +1,30 @@
+# Python 3.10. Install torch/torchvision from the cu118 index first.
+torch==2.1.1
+torchvision==0.16.1
+numpy==1.26.4
+scipy==1.15.3
+opencv-python==4.10.0.82
+open3d==0.18.0
+pypatchworkpp==1.4.1
+plyfile==1.0.3
+trimesh==4.9.0
+scikit-learn==1.5.2
+bidict==0.23.1
+roma==1.6.1
+Pillow
+imageio
+imageio-ffmpeg
+matplotlib
+tqdm
+PyYAML
+yacs==0.1.8
+addict
+rich
+typing-extensions
+jaxtyping
+tensorly
+einops
+tensorboard
+packaging
+ninja
+# gsplat Python sources are under deps/gsplat. Additional CUDA modules: INSTALL.md.

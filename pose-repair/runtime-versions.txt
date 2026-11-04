@@ -1,0 +1,8 @@
+Python 3.11.15
+torch==2.8.0
+numpy==2.2.6
+scipy==1.17.1
+transformers==4.57.6
+PyYAML==6.0.3
+typer==0.25.1
+pydantic==2.10.6

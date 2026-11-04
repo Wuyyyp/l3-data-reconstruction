@@ -1,0 +1,13 @@
+# Generic Conda environment for local development. Do not use this file in the
+# PPU delivery image; follow the venv instructions in README.md instead.
+name: dongfeng-registration
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11
+  - pip
+  - setuptools>=69
+  - wheel
+  - pip:
+      # Runtime and test dependencies are defined once in pyproject.toml.
+      - -e .

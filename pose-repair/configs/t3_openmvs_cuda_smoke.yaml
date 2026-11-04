@@ -1,0 +1,54 @@
+# Bounded T3 profile for validating the CUDA OpenMVS dense backend under WSL.
+canonical_root: ../../data/T3_full_1024_canonical
+semantic_cache_root: ../../data_cache/T3/semantic_masks
+delivery_root: ../../outputs/交付物T3点云（COLMAP+Lidar）
+pose_csv: ../../outputs/交付物T3点云（COLMAP+Lidar）/image_camera_to_world_after.csv
+calibration_pkl: ../../data/T3_full_1024_canonical/result_interpolation_standard.pkl
+output_root: ../../outputs/T3_openmvs_cuda_smoke/colmap
+
+colmap_executable: ../tools/colmap_pose_prior/bin/colmap
+ba_mode: absolute_pose_prior
+absolute_pose_prior_colmap_executable: ../tools/colmap_pose_prior/bin/colmap
+ba_position_prior_sigma_m: 0.1
+ba_rotation_prior_sigma_deg: 0.5
+pose_variant: after
+run_bundle_adjustment: true
+run_dense: true
+
+mvs_backend: openmvs
+openmvs_interface_colmap_executable: ../tools/openmvs-cuda/bin/InterfaceCOLMAP
+openmvs_densify_point_cloud_executable: ../tools/openmvs-cuda/bin/DensifyPointCloud
+openmvs_resolution_level: 1
+openmvs_max_resolution: 1280
+openmvs_min_resolution: 640
+openmvs_number_views: 8
+openmvs_number_views_fuse: 3
+openmvs_gpu_device: "0"
+
+start_frame: 0
+frame_count: 5
+feature_max_image_size: 2400
+matching_pair_offsets: [1, 2, 5]
+matching_inter_camera_pairs: []
+use_gpu: false
+gpu_index: "0"
+
+ba_refine_points3d: true
+ba_min_track_len: 3
+ba_max_reproj_error: 4.0
+ba_min_tri_angle_deg: 1.5
+
+dense_max_image_size: 1280
+patch_match_max_num_neighbors: 12
+patch_match_num_iterations: 4
+patch_match_num_samples: 10
+patch_match_depth_min_m: 0.1
+patch_match_depth_max_m: 200.0
+patch_match_filter: true
+stereo_fusion_use_cache: true
+stereo_fusion_cache_size_gb: 16
+
+colmap_pose_mask_classes:
+  [person, rider, bicycle, motorcycle, car, bus, truck, train, trailer, caravan, animal, vegetation, sky]
+colmap_dense_mask_classes:
+  [person, rider, bicycle, motorcycle, car, bus, truck, train, trailer, caravan, animal, sky]

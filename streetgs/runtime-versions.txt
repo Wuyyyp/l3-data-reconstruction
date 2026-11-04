@@ -1,0 +1,9 @@
+Python 3.10.22
+torch==2.1.1+cu118
+gsplat==1.5.3
+numpy==1.26.4
+scipy==1.15.3
+open3d==0.18.0
+fused-ssim==0.0.0
+opencv-python==4.10.0.82
+plyfile==1.0.3

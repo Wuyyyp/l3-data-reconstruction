@@ -1,0 +1,26 @@
+diff --git a/libs/IO/CMakeLists.txt b/libs/IO/CMakeLists.txt
+index 46922ee..08f2a7e 100644
+--- a/libs/IO/CMakeLists.txt
++++ b/libs/IO/CMakeLists.txt
+@@ -1,7 +1,7 @@
+ # Macro to check pkg-config modules and produce a full-path library list
+ macro(pkg_check_modules_fullpath_libs PREFIX MODULE_NAME)
+ 	# Call pkg_check_modules
+-	pkg_check_modules(${PREFIX} REQUIRED IMPORTED_TARGET ${MODULE_NAME})
++	pkg_check_modules(${PREFIX} QUIET IMPORTED_TARGET ${MODULE_NAME})
+ 	if(${PREFIX}_FOUND)
+ 		set(${PREFIX}_FULLPATH_LIBRARIES "" PARENT_SCOPE)
+ 		foreach(lib ${${PREFIX}_LIBRARIES})
+diff --git a/apps/InterfaceMetashape/InterfaceMetashape.cpp b/apps/InterfaceMetashape/InterfaceMetashape.cpp
+index ca36462..2d12500 100644
+--- a/apps/InterfaceMetashape/InterfaceMetashape.cpp
++++ b/apps/InterfaceMetashape/InterfaceMetashape.cpp
+@@ -674,7 +674,7 @@ bool UndistortBrown(Image& imageData, uint32_t ID, const DistCoeff& dc, const St
+ 
+ 	// save undistorted image
+ 	imageData.image = imgUndist;
+-	imageData.name = pathData + String::FormatString(_T("%05u.jxl"), ID);
++	imageData.name = pathData + String::FormatString(_T("%05u.png"), ID);
+ 	Util::ensureFolder(imageData.name);
+ 	return imageData.image.Save(imageData.name);
+ }

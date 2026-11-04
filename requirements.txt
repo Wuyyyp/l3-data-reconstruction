@@ -1,0 +1,6 @@
+# Common build tools only. Install in each component's own venv.
+# For the full pipeline run install.sh for pose, dvp, mesh and streetgs (INSTALL.md).
+packaging
+setuptools>=77,<82
+wheel
+ninja

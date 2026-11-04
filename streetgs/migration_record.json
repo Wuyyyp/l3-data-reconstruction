@@ -1,0 +1,25 @@
+{
+  "source": "/mnt/zhoukaixuan/code/street_gaussians",
+  "destination": "/mnt/zhoukaixuan_workspace/code/street_gaussians",
+  "copied_files_verified": 3320,
+  "path_updated_files": [
+    "scripts/schedule_bm25k.py",
+    "scripts/probe_fixed500.py",
+    "scripts/inspect_footprints.py",
+    "scripts/build_gt50k_visuals.py",
+    "scripts/compare_old50k_current.py",
+    "scripts/probe_optimizer.py",
+    "scripts/probe_mcmc.py",
+    "scripts/build_fixed_training_report.py",
+    "scripts/probe_color.py",
+    "scripts/queue_sky25k_gpu1.py",
+    "scripts/build_bm25k_report.py",
+    "scripts/probe_bilateral.py",
+    "scripts/probe_split32.py"
+  ],
+  "output_link": "/mnt/zhoukaixuan/code/street_gaussians/output",
+  "dependency_link": "/mnt/zhoukaixuan/code/.tools",
+  "source_preserved": true,
+  "time": 1791443162.0242815,
+  "validation": "3320 source files hash verified before runtime path edits; edited Python AST valid; wrapper bash syntax and gsplat import successful; output link valid"
+}
